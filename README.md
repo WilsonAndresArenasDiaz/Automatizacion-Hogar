@@ -45,14 +45,6 @@ Además:
 
 ---
 
-# 🏗 Arquitectura del Proyecto
-
-![Arquitectura](https://raw.githubusercontent.com/USER/REPO/main/arquitectura.png)
-
-> Reemplaza la imagen por la tuya en el repositorio.
-
----
-
 # 🧰 Componentes Utilizados
 
 | Componente | Descripción |
