@@ -76,7 +76,7 @@ Además:
 |---|---|
 | SDA | GPIO 21 |
 | SCL | GPIO 22 |
-| VCC | 3.3V |
+| VCC | VIN |
 | GND | GND |
 
 ---
