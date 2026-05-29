@@ -140,20 +140,19 @@ Esto permite integrar asistentes de voz fácilmente.
 #include <WiFi.h>
 #include <WebServer.h>
  
-// ✅ SOLO AGREGADO OLED
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
  
 // ==========================
-// ✅ CONFIG OLED
+// ✅ OLED
 // ==========================
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
  
 // ==========================
-// 📶 CONFIGURACIÓN WIFI
+// 📶 WIFI
 // ==========================
 const char* ssid = "CASA69";
 const char* password = "Casa692025";
@@ -168,7 +167,7 @@ const char* password = "Casa692025";
 WebServer server(80);
  
 // ==========================
-// ✅ FUNCIÓN OLED (mínima y segura)
+// ✅ FUNCIÓN OLED
 // ==========================
 void mostrarOLED(String texto) {
   display.clearDisplay();
