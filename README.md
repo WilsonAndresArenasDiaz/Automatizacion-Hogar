@@ -134,8 +134,6 @@ Esto permite integrar asistentes de voz fácilmente.
 
 # 🔥 Código Principal
 
-## Activación de Modos
-
 ```
 #include <WiFi.h>
 #include <WebServer.h>
