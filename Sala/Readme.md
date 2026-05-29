@@ -31,7 +31,6 @@ La pantalla LCD I2C usa este protocolo para comunicarse usando solo 2 cables:
 * SDA
 * SCL
 
-
 ### `#include <LiquidCrystal_I2C.h>`
 
 Carga la librería especial para controlar pantallas LCD con módulo I2C.
@@ -55,9 +54,7 @@ Se crea el objeto `lcd`.
 | `16`      | Número de columnas           |
 | `2`       | Número de filas              |
 
-
 # 🦖 Diseño del dinosaurio
-
 ```cpp
 byte dino[8] = {
   B00111,
@@ -78,7 +75,6 @@ Se crea un carácter personalizado de 8 filas.
 Cada `1` representa un píxel encendido.
 
 Ejemplo visual:
-
 ```text
  ███
  █ █
@@ -91,7 +87,6 @@ Ejemplo visual:
 
 
 # 🌵 Diseño del cactus
-
 ```cpp
 byte cactus[8] = {
   B00100,
@@ -111,11 +106,9 @@ Se diseña el obstáculo del juego.
 
 
 # 🎮 Variables principales
-
 ```cpp
 int dinoPos = 1;
 ```
-
 ## Explicación
 
 Controla la posición vertical del dinosaurio.
@@ -125,29 +118,22 @@ Controla la posición vertical del dinosaurio.
 | `0`   | Arriba   |
 | `1`   | Abajo    |
 
-
 ```cpp
 int score = 0;
 ```
-
 Guarda el puntaje del jugador.
-
 
 ```cpp
 bool lastButtonState = HIGH;
 ```
-
 Guarda el estado anterior del botón.
 
 Sirve para detectar solo una pulsación y evitar múltiples cambios rápidos.
 
-
 # 🌵 Configuración de múltiples cactus
-
 ```cpp
 const int MAX_CACTUS = 3;
 ```
-
 Máximo número de cactus simultáneos.
 
 
