@@ -136,23 +136,183 @@ Esto permite integrar asistentes de voz fácilmente.
 
 ## Activación de Modos
 
-```cpp
+```
+#include <WiFi.h>
+#include <WebServer.h>
+ 
+// ✅ SOLO AGREGADO OLED
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+ 
+// ==========================
+// ✅ CONFIG OLED
+// ==========================
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+ 
+// ==========================
+// 📶 CONFIGURACIÓN WIFI
+// ==========================
+const char* ssid = "CASA69";
+const char* password = "Casa692025";
+ 
+// ==========================
+// 🔌 PINES LED
+// ==========================
+#define LED_ROJO 25
+#define LED_VERDE 26
+#define LED_AMARILLO 27  // reemplaza azul
+ 
+WebServer server(80);
+ 
+// ==========================
+// ✅ FUNCIÓN OLED (mínima y segura)
+// ==========================
+void mostrarOLED(String texto) {
+  display.clearDisplay();
+  display.setTextColor(WHITE);
+  display.setTextSize(2);
+  display.setCursor(0, 20);
+  display.println(texto);
+  display.display();
+}
+ 
+// ==========================
+// 🔌 CONTROL HARDWARE
+// ==========================
+void apagarTodo() {
+  digitalWrite(LED_ROJO, LOW);
+  digitalWrite(LED_VERDE, LOW);
+  digitalWrite(LED_AMARILLO, LOW);
+}
+ 
 void activarModo(String modo) {
-
+ 
   apagarTodo();
-
+ 
   if (modo == "spa") {
     digitalWrite(LED_ROJO, HIGH);
-    mostrarOLED("SPA");
+    mostrarOLED("SPA");   // ✅ agregado
   }
   else if (modo == "manana") {
     digitalWrite(LED_AMARILLO, HIGH);
-    mostrarOLED("DIA");
+    mostrarOLED("DIA");   // ✅ agregado
   }
   else if (modo == "noche") {
     digitalWrite(LED_VERDE, HIGH);
-    mostrarOLED("NOCHE");
+    mostrarOLED("NOCHE"); // ✅ agregado
   }
+}
+ 
+// ==========================
+// 🧠 PROCESAMIENTO INTELIGENTE
+// ==========================
+String interpretarModo(String entrada) {
+ 
+  entrada.trim();
+  entrada.toLowerCase();
+ 
+  if (entrada.indexOf("spa") >= 0) return "spa";
+ 
+  if (entrada.indexOf("mañana") >= 0 || entrada.indexOf("manana") >= 0)
+    return "manana";
+ 
+  if (entrada.indexOf("noche") >= 0)
+    return "noche";
+ 
+  return "none";
+}
+ 
+// ==========================
+// 🌐 API WEB
+// ==========================
+void handleModo() {
+ 
+  String comando = server.arg("modo");
+ 
+  Serial.println("Comando recibido:");
+  Serial.println(comando);
+ 
+  String modo = interpretarModo(comando);
+ 
+  if (modo != "none") {
+ 
+    activarModo(modo);
+ 
+    Serial.print("Modo activado: ");
+    Serial.println(modo);
+ 
+    server.send(200, "application/json",
+      "{\"status\":\"ok\",\"modo\":\""+modo+"\"}");
+ 
+  } else {
+ 
+    mostrarOLED("ERROR");  // ✅ agregado
+ 
+    server.send(400, "application/json",
+      "{\"status\":\"error\"}");
+  }
+}
+ 
+// ==========================
+// 🚀 SETUP
+// ==========================
+void setup() {
+ 
+  Serial.begin(115200);
+ 
+  // ✅ EXACTAMENTE COMO TU TEST FUNCIONÓ
+  Wire.begin(21, 22);
+  delay(1000);
+ 
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println("OLED FALLÓ");
+  } else {
+    Serial.println("OLED OK");
+ 
+    // ✅ mensaje inicial (igual test)
+    display.clearDisplay();
+    display.setTextColor(WHITE);
+    display.setTextSize(2);
+    display.setCursor(0, 20);
+    display.println("INICIO");
+    display.display();
+  }
+ 
+  pinMode(LED_ROJO, OUTPUT);
+  pinMode(LED_VERDE, OUTPUT);
+  pinMode(LED_AMARILLO, OUTPUT);
+ 
+  apagarTodo();
+ 
+  Serial.print("Conectando a WiFi: ");
+  Serial.println(ssid);
+ 
+  WiFi.begin(ssid, password);
+ 
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+ 
+  Serial.println("\n✅ Conectado a WiFi");
+  Serial.print("📡 IP ESP32: ");
+  Serial.println(WiFi.localIP());
+ 
+  // ✅ listo en pantalla
+  mostrarOLED("LISTO");
+ 
+  // Rutas
+  server.on("/modo", handleModo);
+ 
+  server.begin();
+}
+ 
+// ==========================
+void loop() {
+  server.handleClient();
 }
 ```
 
