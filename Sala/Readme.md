@@ -1,3 +1,398 @@
+# 🎹 Piano Arduino con LCD I2C y TIP41C
+
+# 📌 Descripción del proyecto
+
+Este proyecto implementa un piano electrónico usando:
+
+* Arduino UNO
+* 7 botones musicales
+* Pantalla LCD I2C 16x2
+* Transistor TIP41C
+* Speaker/Buzzer
+* Notas musicales reales
+
+Cada botón reproduce una nota musical distinta y la pantalla muestra:
+
+✅ Nombre de la nota
+✅ Frecuencia en Hz
+✅ Estado del piano
+
+# 🧰 Librerías utilizadas
+```cpp id="zy0m5v"
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+```
+
+# 📚 Explicación
+
+## `#include <Wire.h>`
+
+Activa la comunicación I2C del Arduino.
+
+La pantalla LCD I2C usa únicamente:
+
+* SDA
+* SCL
+
+para comunicarse.
+
+
+## `#include <LiquidCrystal_I2C.h>`
+
+Carga la librería para controlar la pantalla LCD mediante I2C.
+
+
+# 🔈 Pin de salida de audio
+```cpp id="2l7v81"
+const int speakerPin = 9;
+```
+
+## Explicación
+
+Pin que envía la señal de audio.
+
+Este pin va conectado al:
+
+* TIP41C
+* Speaker
+
+
+# 🎹 Configuración de botones
+```cpp id="uzcm7q"
+const int buttonPins[] = {2, 3, 4, 5, 6, 7, 8};
+```
+
+## Explicación
+
+Arreglo que almacena los pines de cada tecla del piano.
+
+| Nota | Pin |
+| ---- | --- |
+| DO   | 2   |
+| RE   | 3   |
+| MI   | 4   |
+| FA   | 5   |
+| SOL  | 6   |
+| LA   | 7   |
+| SI   | 8   |
+
+# 🎼 Frecuencias musicales
+```cpp id="5s4h4r"
+const int notes[] = {262, 294, 330, 349, 392, 440, 494};
+```
+
+## Explicación
+
+Frecuencia de cada nota musical en Hertz.
+
+| Nota | Frecuencia |
+| ---- | ---------- |
+| DO   | 262 Hz     |
+| RE   | 294 Hz     |
+| MI   | 330 Hz     |
+| FA   | 349 Hz     |
+| SOL  | 392 Hz     |
+| LA   | 440 Hz     |
+| SI   | 494 Hz     |
+
+
+# 🖥️ Nombres musicales
+```cpp id="22n7tx"
+const String noteNames[] = {"DO", "RE", "MI", "FA", "SOL", "LA", "SI"};
+```
+
+## Explicación
+
+Se usan para mostrar el nombre de la nota en la LCD.
+
+
+# 🔢 Número de botones
+```cpp id="u7p5m1"
+const int numButtons = 7;
+```
+Cantidad total de teclas del piano.
+
+# 🖥️ Configuración LCD
+```cpp id="b7wp0n"
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+```
+
+## Parámetros
+
+| Parámetro | Significado        |
+| --------- | ------------------ |
+| 0x27      | Dirección I2C      |
+| 16        | Número de columnas |
+| 2         | Número de filas    |
+
+# 💾 Última nota reproducida
+```cpp id="9cf15r"
+int lastNotePlayed = -1;
+```
+
+## Explicación
+
+Guarda la última nota tocada.
+
+Sirve para:
+
+✅ Evitar parpadeos
+✅ Evitar limpiar la pantalla innecesariamente
+
+# ⚙️ Función setup()
+```cpp id="eqaymp"
+void setup()
+```
+Se ejecuta una sola vez al iniciar Arduino.
+
+# 🔈 Configurar speaker
+
+```cpp id="rzepvz"
+pinMode(speakerPin, OUTPUT);
+```
+Define el pin del speaker como salida.
+
+# 🔘 Configuración de botones
+```cpp id="6byk8u"
+for (int i = 0; i < numButtons; i++)
+```
+Recorre todos los botones.
+
+```cpp id="kcvz11"
+pinMode(buttonPins[i], INPUT_PULLUP);
+```
+Configura cada botón como entrada pull-up.
+
+# 📚 ¿Qué es INPUT_PULLUP?
+
+Arduino activa una resistencia interna.
+
+## Funcionamiento
+
+| Estado        | Valor |
+| ------------- | ----- |
+| Sin presionar | HIGH  |
+| Presionado    | LOW   |
+
+
+# 🖥️ Inicializar LCD
+
+```cpp id="fjlwm1"
+lcd.init();
+lcd.backlight();
+```
+Inicializa y enciende la pantalla LCD.
+
+# 🏁 Pantalla inicial
+```cpp id="sl2v3s"
+mostrarPantallaInicio();
+```
+Muestra mensaje de bienvenida.
+
+# 🔄 Función loop()
+```cpp id="jpvslj"
+void loop()
+```
+Se ejecuta continuamente.
+
+# 🔍 Variables de control
+```cpp id="5vyqqk"
+bool buttonPressed = false;
+```
+Indica si algún botón fue presionado.
+
+```cpp id="f0qkqk"
+int currentNoteIndex = -1;
+```
+Guarda la nota actual.
+
+# 🔘 Revisar botones
+```cpp id="3blwvh"
+for (int i = 0; i < numButtons; i++)
+```
+Recorre todos los botones.
+
+# Detectar pulsación
+```cpp id="evg1ng"
+if (digitalRead(buttonPins[i]) == LOW)
+```
+Detecta cuando un botón es presionado.
+
+# Guardar nota actual
+```cpp id="3dyukn"
+currentNoteIndex = i;
+```
+Guarda cuál nota corresponde.
+
+# Activar bandera
+```cpp id="b8sgkl"
+buttonPressed = true;
+```
+Indica que sí hubo pulsación.
+
+# Salir del bucle
+```cpp id="9l8u7i"
+break;
+```
+Detiene la búsqueda porque ya encontró una tecla presionada.
+
+# 🎵 Reproducir sonido
+```cpp id="3n2ul4"
+tone(speakerPin, notes[currentNoteIndex]);
+```
+Genera la frecuencia musical.
+
+# 📺 Actualizar LCD solo si cambia la nota
+```cpp id="70dskw"
+if (currentNoteIndex != lastNotePlayed)
+```
+Evita refrescar innecesariamente la pantalla.
+
+Esto elimina:
+
+❌ Parpadeos
+❌ Reescritura constante
+
+# Limpiar pantalla
+```cpp id="zvmg3x"
+lcd.clear();
+```
+Borra el contenido anterior.
+
+# Mostrar nota
+```cpp id="f4j3ol"
+lcd.print("Nota: " + noteNames[currentNoteIndex]);
+```
+Muestra el nombre musical.
+
+Ejemplo:
+```text id="icnd9k"
+Nota: DO
+```
+
+# Mostrar frecuencia
+```cpp id="yg2xvq"
+lcd.print("Freq: " + String(notes[currentNoteIndex]) + " Hz");
+```
+Muestra frecuencia.
+
+Ejemplo:
+```text id="kdbec2"
+Freq: 262 Hz
+```
+
+# Guardar última nota
+```cpp id="x5l68k"
+lastNotePlayed = currentNoteIndex;
+```
+Actualiza la última nota reproducida.
+
+# 🔇 Si no hay botones presionados
+
+```cpp id="yp0lma"
+else
+```
+Cuando nadie toca el piano.
+
+# Detener sonido
+```cpp id="zk4lo9"
+noTone(speakerPin);
+```
+Apaga el speaker.
+
+# Restaurar pantalla inicial
+```cpp id="3pqkdf"
+if (lastNotePlayed != -1)
+```
+Solo actualiza una vez.
+
+```cpp id="r3s0cc"
+mostrarPantallaInicio();
+```
+Vuelve al menú principal.
+
+# Reiniciar nota
+```cpp id="yc4j0z"
+lastNotePlayed = -1;
+```
+Indica que ya no hay nota activa.
+
+# ⏱️ Delay pequeño
+```cpp id="x8zv6o"
+delay(10);
+```
+Reduce rebotes eléctricos.
+
+# 🖥️ Función mostrarPantallaInicio()
+```cpp id="8t2ncm"
+void mostrarPantallaInicio()
+```
+Pantalla de espera.
+
+# Limpiar LCD
+```cpp id="v8l4xv"
+lcd.clear();
+```
+Borra contenido anterior.
+
+# Texto principal
+```cpp id="f02r1f"
+lcd.print("  PIANO ARDUINO ");
+```
+Título del proyecto.
+
+# Texto secundario
+```cpp id="vgq0ow"
+lcd.print("Presiona una tec");
+```
+Indica al usuario tocar una tecla.
+
+# 🔌 Conexiones LCD I2C
+
+| LCD | Arduino UNO |
+| --- | ----------- |
+| VCC | 5V          |
+| GND | GND         |
+| SDA | A4          |
+| SCL | A5          |
+
+# 🔘 Conexión de botones
+
+| Nota | Pin Arduino |
+| ---- | ----------- |
+| DO   | 2           |
+| RE   | 3           |
+| MI   | 4           |
+| FA   | 5           |
+| SOL  | 6           |
+| LA   | 7           |
+| SI   | 8           |
+
+Cada botón:
+
+* Un lado al pin
+* Otro lado a GND
+
+---
+
+# 🔈 Conexión del TIP41C
+
+## 📌 Configuración típica
+
+| TIP41C   | Conexión                   |
+| -------- | -------------------------- |
+| Base     | Pin 9 mediante resistencia |
+| Colector | Speaker                    |
+| Emisor   | GND                        |
+
+# 🔊 Speaker
+
+| Speaker  | Conexión        |
+| -------- | --------------- |
+| Positivo | 5V              |
+| Negativo | Colector TIP41C |
+
+
 # 🦖 Juego Dino Multi Obstáculos - Arduino + LCD I2C
 
 ## 📌 Descripción del proyecto
