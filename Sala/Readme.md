@@ -12,7 +12,6 @@ Este proyecto crea un juego estilo Chrome Dino utilizando:
 
 El dinosaurio puede moverse entre la parte superior e inferior de la pantalla para esquivar cactus.
 
----
 
 # 📚 Librerías utilizadas
 
@@ -32,13 +31,11 @@ La pantalla LCD I2C usa este protocolo para comunicarse usando solo 2 cables:
 * SDA
 * SCL
 
----
 
 ### `#include <LiquidCrystal_I2C.h>`
 
 Carga la librería especial para controlar pantallas LCD con módulo I2C.
 
----
 
 # 🖥️ Configuración de la pantalla LCD
 
@@ -58,7 +55,6 @@ Se crea el objeto `lcd`.
 | `16`      | Número de columnas           |
 | `2`       | Número de filas              |
 
----
 
 # 🦖 Diseño del dinosaurio
 
@@ -93,7 +89,6 @@ Ejemplo visual:
  █ █
 ```
 
----
 
 # 🌵 Diseño del cactus
 
@@ -114,7 +109,6 @@ byte cactus[8] = {
 
 Se diseña el obstáculo del juego.
 
----
 
 # 🎮 Variables principales
 
@@ -131,7 +125,6 @@ Controla la posición vertical del dinosaurio.
 | `0`   | Arriba   |
 | `1`   | Abajo    |
 
----
 
 ```cpp
 int score = 0;
@@ -139,7 +132,6 @@ int score = 0;
 
 Guarda el puntaje del jugador.
 
----
 
 ```cpp
 bool lastButtonState = HIGH;
@@ -149,7 +141,6 @@ Guarda el estado anterior del botón.
 
 Sirve para detectar solo una pulsación y evitar múltiples cambios rápidos.
 
----
 
 # 🌵 Configuración de múltiples cactus
 
@@ -159,7 +150,6 @@ const int MAX_CACTUS = 3;
 
 Máximo número de cactus simultáneos.
 
----
 
 ```cpp
 int cactusPos[MAX_CACTUS];
@@ -167,7 +157,6 @@ int cactusPos[MAX_CACTUS];
 
 Guarda la posición horizontal de cada cactus.
 
----
 
 ```cpp
 int cactusRow[MAX_CACTUS];
@@ -180,7 +169,6 @@ Guarda en qué fila está cada cactus.
 | `0`   | Arriba |
 | `1`   | Abajo  |
 
----
 
 ```cpp
 bool cactusActivo[MAX_CACTUS];
@@ -188,7 +176,6 @@ bool cactusActivo[MAX_CACTUS];
 
 Indica si el cactus está activo en pantalla.
 
----
 
 # ⚡ Sistema de dificultad
 
@@ -198,7 +185,6 @@ int velocidadInicial = 240;
 
 Velocidad inicial del juego en milisegundos.
 
----
 
 ```cpp
 int velocidad = velocidadInicial;
@@ -206,7 +192,6 @@ int velocidad = velocidadInicial;
 
 Velocidad actual del juego.
 
----
 
 ```cpp
 int velocidadMinima = 80;
@@ -214,7 +199,6 @@ int velocidadMinima = 80;
 
 Límite mínimo de velocidad.
 
----
 
 ```cpp
 int factorAceleracion = 6;
@@ -222,7 +206,6 @@ int factorAceleracion = 6;
 
 Cada punto aumenta la velocidad reduciendo el delay.
 
----
 
 # ⚙️ Función setup()
 
@@ -232,7 +215,6 @@ void setup() {
 
 Función que se ejecuta una sola vez al encender Arduino.
 
----
 
 ## Inicialización LCD
 
@@ -242,7 +224,6 @@ lcd.init();
 
 Inicializa la pantalla LCD.
 
----
 
 ```cpp
 lcd.backlight();
@@ -250,7 +231,6 @@ lcd.backlight();
 
 Enciende la luz de fondo.
 
----
 
 ## Crear caracteres personalizados
 
@@ -266,7 +246,6 @@ Guarda los caracteres en memoria.
 | `0`    | Dino      |
 | `1`    | Cactus    |
 
----
 
 ## Configurar botón
 
@@ -283,7 +262,6 @@ El pin 12 funciona como entrada con resistencia pull-up interna.
 | Sin presionar | HIGH  |
 | Presionado    | LOW   |
 
----
 
 ## Aleatoriedad
 
@@ -293,7 +271,6 @@ randomSeed(analogRead(A0));
 
 Genera números aleatorios usando ruido eléctrico del pin A0.
 
----
 
 ## Reinicio del juego
 
@@ -303,7 +280,6 @@ reiniciarVariablesJuego();
 
 Restablece todas las variables.
 
----
 
 ## Pantalla de inicio
 
@@ -313,7 +289,6 @@ mostrarPantallaInicio();
 
 Muestra mensaje antes de iniciar.
 
----
 
 # 🔄 Función loop()
 
@@ -323,7 +298,6 @@ void loop() {
 
 Se ejecuta infinitamente.
 
----
 
 # 🔘 Lectura del botón
 
@@ -333,7 +307,6 @@ bool buttonState = digitalRead(12);
 
 Lee el estado del botón.
 
----
 
 ## Detectar pulsación
 
@@ -343,7 +316,6 @@ if (buttonState == LOW && lastButtonState == HIGH)
 
 Detecta el momento exacto de presionar.
 
----
 
 ## Cambiar posición del dinosaurio
 
@@ -355,7 +327,6 @@ Si está abajo sube.
 
 Si está arriba baja.
 
----
 
 ## Antirebote
 
@@ -365,7 +336,6 @@ delay(40);
 
 Evita falsas pulsaciones.
 
----
 
 ## Guardar estado anterior
 
@@ -375,7 +345,6 @@ lastButtonState = buttonState;
 
 Actualiza el estado del botón.
 
----
 
 # 🌵 Generación aleatoria de cactus
 
@@ -385,7 +354,6 @@ if (random(0, 100) < 30)
 
 30% de probabilidad de generar un cactus nuevo.
 
----
 
 ```cpp
 generarNuevoCactus();
@@ -393,7 +361,6 @@ generarNuevoCactus();
 
 Activa un cactus nuevo.
 
----
 
 # 🖥️ Dibujar pantalla
 
@@ -403,7 +370,6 @@ lcd.clear();
 
 Limpia toda la pantalla.
 
----
 
 # 🏆 Mostrar score
 
@@ -415,7 +381,6 @@ lcd.print(score);
 
 Muestra el puntaje.
 
----
 
 # 🦖 Dibujar dinosaurio
 
@@ -426,7 +391,6 @@ lcd.write(byte(0));
 
 Dibuja el dino en columna 0.
 
----
 
 # 🌵 Bucle de cactus
 
@@ -436,7 +400,6 @@ for (int i = 0; i < MAX_CACTUS; i++)
 
 Recorre todos los cactus.
 
----
 
 # Dibujar cactus
 
@@ -447,7 +410,6 @@ lcd.write(byte(1));
 
 Dibuja el cactus.
 
----
 
 # 💥 Detección de colisión
 
@@ -459,7 +421,6 @@ Si el cactus llega al dino y están en la misma fila:
 
 ➡️ GAME OVER
 
----
 
 # Movimiento del cactus
 
@@ -469,7 +430,6 @@ cactusPos[i]--;
 
 El cactus se mueve a la izquierda.
 
----
 
 # Punto ganado
 
@@ -482,7 +442,6 @@ Cuando sale de pantalla:
 * Se desactiva
 * Suma punto
 
----
 
 # ⚡ Aumento de dificultad
 
@@ -492,7 +451,6 @@ velocidad = velocidadInicial - (score * factorAceleracion);
 
 El juego se acelera con cada punto.
 
----
 
 # Limitar velocidad mínima
 
@@ -502,7 +460,6 @@ if (velocidad < velocidadMinima)
 
 Evita que el juego sea imposible.
 
----
 
 # ⏱️ Delay principal
 
@@ -512,7 +469,6 @@ delay(velocidad);
 
 Controla la velocidad general.
 
----
 
 # 🌵 Función generarNuevoCactus()
 
@@ -522,7 +478,7 @@ void generarNuevoCactus()
 
 Genera cactus nuevos.
 
----
+
 
 ## Evitar cactus muy pegados
 
@@ -532,7 +488,6 @@ if (cactusActivo[i] && cactusPos[i] >= 12)
 
 No deja crear cactus demasiado juntos.
 
----
 
 ## Activar cactus
 
@@ -542,7 +497,6 @@ cactusPos[i] = 15;
 
 Aparece al extremo derecho.
 
----
 
 ```cpp
 cactusRow[i] = random(0, 2);
@@ -550,7 +504,6 @@ cactusRow[i] = random(0, 2);
 
 Fila aleatoria.
 
----
 
 ```cpp
 cactusActivo[i] = true;
@@ -558,7 +511,6 @@ cactusActivo[i] = true;
 
 Activa el cactus.
 
----
 
 # 🔄 Función reiniciarVariablesJuego()
 
@@ -568,7 +520,6 @@ void reiniciarVariablesJuego()
 
 Reinicia todas las variables del juego.
 
----
 
 # 🖥️ Pantalla de inicio
 
@@ -578,7 +529,6 @@ void mostrarPantallaInicio()
 
 Muestra mensaje inicial.
 
----
 
 ```cpp
 while(digitalRead(12) == HIGH)
@@ -586,7 +536,6 @@ while(digitalRead(12) == HIGH)
 
 Espera hasta presionar el botón.
 
----
 
 # 💀 Función Game Over
 
@@ -596,7 +545,6 @@ void ejecutarGameOver()
 
 Muestra pantalla de derrota.
 
----
 
 ```cpp
 lcd.print("GAME OVER");
@@ -604,15 +552,12 @@ lcd.print("GAME OVER");
 
 Mensaje principal.
 
----
-
 ```cpp
 lcd.print(score);
 ```
 
 Muestra puntaje final.
 
----
 
 ```cpp
 delay(3000);
@@ -620,7 +565,6 @@ delay(3000);
 
 Espera 3 segundos.
 
----
 
 # 🔁 Reinicio automático
 
@@ -631,57 +575,4 @@ mostrarPantallaInicio();
 
 Reinicia el juego.
 
----
-
-# 🔌 Conexiones recomendadas
-
-| LCD I2C | Arduino UNO |
-| ------- | ----------- |
-| VCC     | 5V          |
-| GND     | GND         |
-| SDA     | A4          |
-| SCL     | A5          |
-
----
-
-# 🔘 Botón
-
-| Botón     | Arduino |
-| --------- | ------- |
-| Un lado   | Pin 12  |
-| Otro lado | GND     |
-
----
-
-# 🚀 Mejoras posibles
-
-* Sonido con buzzer
-* Animación de salto
-* Nubes decorativas
-* Récord máximo
-* Menú de dificultad
-* Sensor táctil
-* Pantalla OLED
-
----
-
-# 🏁 Resultado final
-
-Este proyecto implementa:
-
-✅ Sprites personalizados
-✅ Movimiento dinámico
-✅ Obstáculos múltiples
-✅ Colisiones
-✅ Sistema de puntuación
-✅ Dificultad progresiva
-✅ Pantalla de inicio y Game Over
-
-Ideal para aprender:
-
-* Arrays
-* LCD I2C
-* Lógica de videojuegos
-* Entradas digitales
-* Arduino avanzado
 
