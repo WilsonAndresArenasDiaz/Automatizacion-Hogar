@@ -152,8 +152,8 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 // ==========================
 // 📶 WIFI
 // ==========================
-const char* ssid = "CASA69";
-const char* password = "Casa692025";
+const char* ssid = "";
+const char* password = "";
  
 // ==========================
 // 🔌 PINES LED
