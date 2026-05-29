@@ -430,71 +430,53 @@ Cuando sale de pantalla:
 
 
 # ⚡ Aumento de dificultad
-
 ```cpp
 velocidad = velocidadInicial - (score * factorAceleracion);
 ```
-
 El juego se acelera con cada punto.
 
 
 # Limitar velocidad mínima
-
 ```cpp
 if (velocidad < velocidadMinima)
 ```
-
 Evita que el juego sea imposible.
 
 
 # ⏱️ Delay principal
-
 ```cpp
 delay(velocidad);
 ```
-
 Controla la velocidad general.
 
 
 # 🌵 Función generarNuevoCactus()
-
 ```cpp
 void generarNuevoCactus()
 ```
-
 Genera cactus nuevos.
 
-
-
 ## Evitar cactus muy pegados
-
 ```cpp
 if (cactusActivo[i] && cactusPos[i] >= 12)
 ```
-
 No deja crear cactus demasiado juntos.
 
 
 ## Activar cactus
-
 ```cpp
 cactusPos[i] = 15;
 ```
-
 Aparece al extremo derecho.
-
 
 ```cpp
 cactusRow[i] = random(0, 2);
 ```
-
 Fila aleatoria.
-
 
 ```cpp
 cactusActivo[i] = true;
 ```
-
 Activa el cactus.
 
 
@@ -503,7 +485,6 @@ Activa el cactus.
 ```cpp
 void reiniciarVariablesJuego()
 ```
-
 Reinicia todas las variables del juego.
 
 
@@ -512,14 +493,11 @@ Reinicia todas las variables del juego.
 ```cpp
 void mostrarPantallaInicio()
 ```
-
 Muestra mensaje inicial.
-
 
 ```cpp
 while(digitalRead(12) == HIGH)
 ```
-
 Espera hasta presionar el botón.
 
 
@@ -528,37 +506,28 @@ Espera hasta presionar el botón.
 ```cpp
 void ejecutarGameOver()
 ```
-
 Muestra pantalla de derrota.
 
 
 ```cpp
 lcd.print("GAME OVER");
 ```
-
 Mensaje principal.
 
 ```cpp
 lcd.print(score);
 ```
-
 Muestra puntaje final.
-
-
 ```cpp
 delay(3000);
 ```
-
 Espera 3 segundos.
 
-
 # 🔁 Reinicio automático
-
 ```cpp
 reiniciarVariablesJuego();
 mostrarPantallaInicio();
 ```
-
 Reinicia el juego.
 
 # 🎵 Simon Dice - Arduino + LCD I2C + Buzzer
@@ -582,16 +551,12 @@ Cada nivel:
 ✅ Aumenta la dificultad
 ✅ Reduce el tiempo de reacción
 
----
-
 # 🧰 Librerías utilizadas
 
 ```cpp id="2s7u8k"
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 ```
-
----
 
 ## 📚 Explicación
 
@@ -604,16 +569,11 @@ La pantalla LCD usa este protocolo para comunicarse usando solo:
 * SDA
 * SCL
 
----
-
 ### `#include <LiquidCrystal_I2C.h>`
 
 Carga la librería necesaria para controlar la pantalla LCD I2C.
 
----
-
 # 🔌 Pines del hardware
-
 ```cpp id="elgh8h"
 const int speakerPin = 9;
 ```
@@ -621,8 +581,6 @@ const int speakerPin = 9;
 ## Explicación
 
 Pin donde está conectado el buzzer o speaker.
-
----
 
 ```cpp id="k5n6lg"
 const int buttonPins[] = {2, 3, 4, 5};
@@ -639,10 +597,8 @@ Arreglo con los pines de los 4 botones.
 | 3     | 4   |
 | 4     | 5   |
 
----
 
 # 🎼 Frecuencias musicales
-
 ```cpp id="8p4b5g"
 const int notes[] = {262, 294, 330, 349};
 ```
@@ -650,7 +606,6 @@ const int notes[] = {262, 294, 330, 349};
 ## Explicación
 
 Frecuencias de las notas musicales.
-
 | Nota | Frecuencia |
 | ---- | ---------- |
 | DO   | 262 Hz     |
@@ -658,108 +613,74 @@ Frecuencias de las notas musicales.
 | MI   | 330 Hz     |
 | FA   | 349 Hz     |
 
----
-
 # 🖥️ Nombres mostrados en pantalla
-
 ```cpp id="vx11mt"
 const String noteNames[] = {"DO", "RE", "MI", "FA"};
 ```
-
 Se usan para mostrar el nombre de la nota en la LCD.
 
----
-
 # 🔢 Número de botones
-
 ```cpp id="vzjwye"
 const int numButtons = 4;
 ```
-
 Cantidad total de botones.
 
----
-
 # 🎮 Configuración del juego
-
 ```cpp id="v36r5w"
 const int MAX_PASOS = 50;
 ```
-
 Máximo tamaño de la secuencia.
-
----
 
 ```cpp id="1cx8jh"
 int secuencia[MAX_PASOS];
 ```
-
 Arreglo donde se guarda toda la secuencia del juego.
 
 Ejemplo:
-
 ```text id="w4hnyv"
 [2,0,1,3,2]
 ```
 
----
-
 ```cpp id="0kmb6q"
 int nivel = 0;
 ```
-
 Guarda el nivel actual del jugador.
 
----
-
 # ⚡ Dificultad progresiva
-
 ```cpp id="k8jl7l"
 int tiempoMuestraInicial = 500;
 ```
-
 Tiempo inicial que dura cada nota.
 
----
 
 ```cpp id="94p0th"
 int tiempoPausaInicial = 250;
 ```
-
 Tiempo inicial entre notas.
 
----
 
 ```cpp id="t6d6g8"
 int factorAceleracion = 25;
 ```
-
 Cantidad de velocidad que aumenta por nivel.
 
----
 
 ```cpp id="w6pnsp"
 int tiempoMuestraMinimo = 150;
 ```
-
 Límite mínimo de duración de nota.
 
----
 
 ```cpp id="5dxn3l"
 int tiempoPausaMinimo = 80;
 ```
-
 Límite mínimo de pausa.
-
 ---
-
 # 🖥️ Configuración de pantalla LCD
 
 ```cpp id="2d9pjr"
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 ```
-
 ## Parámetros
 
 | Parámetro | Significado   |
@@ -768,50 +689,33 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 | 16        | Columnas      |
 | 2         | Filas         |
 
----
-
 # ⚙️ Función setup()
-
 ```cpp id="wffgfo"
 void setup()
 ```
-
 Se ejecuta una sola vez al iniciar Arduino.
 
----
-
 # 🔈 Configurar buzzer
-
 ```cpp id="2mgpzr"
 pinMode(speakerPin, OUTPUT);
 ```
-
 Define el speaker como salida.
 
----
 
 ```cpp id="w5e7xy"
 digitalWrite(speakerPin, LOW);
 ```
-
 Apaga el buzzer inicialmente.
 
----
-
 # 🔘 Configuración de botones
-
 ```cpp id="w27m4n"
 for (int i = 0; i < numButtons; i++)
 ```
-
 Recorre todos los botones.
-
----
 
 ```cpp id="5u6v9n"
 pinMode(buttonPins[i], INPUT_PULLUP);
 ```
-
 Configura los botones como entrada pull-up.
 
 ## Funcionamiento
@@ -821,142 +725,94 @@ Configura los botones como entrada pull-up.
 | Sin presionar | HIGH  |
 | Presionado    | LOW   |
 
----
-
 # 🖥️ Inicializar LCD
 
 ```cpp id="f63iha"
 lcd.init();
 lcd.backlight();
 ```
-
 Inicializa y enciende la pantalla.
-
----
 
 # 🎲 Aleatoriedad
 
 ```cpp id="3p8w0s"
 randomSeed(analogRead(A0));
-```
 
 Genera números aleatorios usando ruido eléctrico.
-
----
 
 # 🏁 Pantalla inicial
 
 ```cpp id="7yr3n0"
 mostrarPantallaInicio();
-```
 
 Muestra la pantalla de bienvenida.
-
----
 
 # 🔄 Función loop()
 
 ```cpp id="nuy70f"
 void loop()
 ```
-
 Se ejecuta infinitamente.
 
----
-
 # 🎲 Añadir nueva nota aleatoria
-
 ```cpp id="x6l0tf"
 secuencia[nivel] = random(0, numButtons);
 ```
-
 Genera un número entre 0 y 3.
 
 Cada número representa un botón.
-
----
-
 ```cpp id="pjcvz5"
 nivel++;
 ```
-
 Aumenta el nivel.
-
----
 
 # ⚡ Velocidad dinámica
 
 ```cpp id="0owbql"
 int tiempoMuestraActual = tiempoMuestraInicial - (nivel * factorAceleracion);
 ```
-
 Reduce el tiempo de las notas conforme aumenta el nivel.
-
----
 
 ```cpp id="vw7mhl"
 int tiempoPausaActual = tiempoPausaInicial - (nivel * (factorAceleracion / 2));
 ```
-
 Reduce las pausas.
 
----
-
 # 🚫 Limitar velocidad mínima
-
 ```cpp id="l6zhl8"
 if (tiempoMuestraActual < tiempoMuestraMinimo)
 ```
-
 Evita que el juego sea imposible.
-
----
 
 # 🖥️ Mostrar nivel
 
 ```cpp id="m6k1xk"
 lcd.print("SIMON DICE:");
 ```
-
 Título del juego.
-
----
 
 ```cpp id="5s6fc8"
 lcd.print("Nivel: ");
 lcd.print(nivel);
 ```
-
 Muestra el nivel actual.
 
----
-
 # 🎵 Mostrar secuencia
-
 ```cpp id="7muhf8"
 for (int i = 0; i < nivel; i++)
 ```
-
 Recorre toda la secuencia.
 
----
-
 # Nota actual
-
 ```cpp id="m0uc2w"
 int botonActual = secuencia[i];
 ```
-
 Obtiene la nota actual.
 
----
-
 # Mostrar nota
-
 ```cpp id="4lk02n"
 lcd.print(noteNames[botonActual]);
 ```
-
 Muestra:
 
 * DO
@@ -964,47 +820,31 @@ Muestra:
 * MI
 * FA
 
----
-
 # 🔊 Reproducir sonido
-
 ```cpp id="cb2ih4"
 tone(speakerPin, notes[botonActual]);
 ```
-
 Genera la frecuencia musical.
 
----
-
 # Esperar duración
-
 ```cpp id="4rl58t"
 delay(tiempoMuestraActual);
 ```
-
 Duración dinámica de la nota.
-
----
 
 # Apagar sonido
 
 ```cpp id="k0gn5z"
 noTone(speakerPin);
 ```
-
 Detiene el buzzer.
-
----
 
 # ⏳ Pausa entre notas
 
 ```cpp id="7ysw4e"
 delay(tiempoPausaActual);
 ```
-
 Pausa dinámica.
-
----
 
 # 👤 Turno del jugador
 
@@ -1014,17 +854,13 @@ lcd.print("TU TURNO...");
 
 Indica que debe repetir.
 
----
-
 # Esperar botón
 
 ```cpp id="f6x3tt"
 while (botonPresionado == -1)
 ```
-
 Espera hasta que el jugador presione.
 
----
 
 # Detectar botón
 
@@ -1034,69 +870,48 @@ if (digitalRead(buttonPins[b]) == LOW)
 
 Detecta pulsación.
 
----
-
 # Guardar botón
 
 ```cpp id="4r7ndn"
 botonPresionado = b;
 ```
-
 Guarda cuál botón fue presionado.
-
----
 
 # Sonido del jugador
 
 ```cpp id="gmq1t5"
 tone(speakerPin, notes[b]);
 ```
-
 Reproduce la nota.
 
----
-
 # Mostrar botón presionado
-
 ```cpp id="c44i44"
 lcd.print(noteNames[b]);
 ```
-
 Muestra la nota tocada.
 
----
-
 # Esperar soltar botón
-
 ```cpp id="8c7f0f"
 while (digitalRead(buttonPins[b]) == LOW)
 ```
-
 Evita múltiples lecturas.
 
----
 
 # ❌ Verificar error
 
 ```cpp id="y5x2f2"
 if (botonPresionado != botonCorrecto)
 ```
-
 Si la secuencia no coincide:
 
 ➡️ GAME OVER
-
----
 
 # ✅ Victoria parcial
 
 ```cpp id="lqk65s"
 lcd.print("¡CORRECTO!");
 ```
-
 Mensaje de éxito.
-
----
 
 # 🎶 Sonido de victoria
 
@@ -1105,10 +920,7 @@ tone(speakerPin, 523);
 tone(speakerPin, 659);
 tone(speakerPin, 784);
 ```
-
 Melodía ascendente de victoria.
-
----
 
 # 🏁 Función mostrarPantallaInicio()
 
@@ -1118,39 +930,25 @@ void mostrarPantallaInicio()
 
 Pantalla inicial del juego.
 
----
-
 # Esperar inicio
-
 ```cpp id="xjll4l"
 while (!empezar)
 ```
-
 Espera hasta que el usuario presione un botón.
 
----
-
 # Sonido de inicio
-
 ```cpp id="xg5x5o"
 tone(speakerPin, 440);
 tone(speakerPin, 554);
 tone(speakerPin, 659);
 ```
-
 Melodía de arranque.
 
----
-
 # Reiniciar nivel
-
 ```cpp id="jru4q1"
 nivel = 0;
 ```
-
 Empieza desde nivel 0.
-
----
 
 # 💀 Función Game Over
 
