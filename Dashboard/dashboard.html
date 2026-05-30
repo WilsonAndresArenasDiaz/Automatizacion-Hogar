@@ -1,1 +1,39 @@
-
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Casa IoT</title>
+    <style>
+        body { font-family: Arial; background: #1e2a3a; color: white; padding: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap: 20px; }
+        .card { background: #2c3e4e; border-radius: 15px; padding: 15px; }
+        h2 { margin:0 0 10px; border-left: 5px solid #00c3ff; padding-left: 10px; }
+        .valor { font-size: 2rem; font-weight: bold; }
+    </style>
+</head>
+<body>
+<h1>🏠 Automatización Hogar</h1>
+<div class="grid" id="dashboard"></div>
+<script>
+    async function cargarDatos() {
+        // Aquí deberías llamar a tu API que devuelva los últimos datos de cada módulo.
+        // Ejemplo simulado con fetch a endpoints locales (si estás en la misma red)
+        const modulos = ['baño', 'cocina', 'habitacion', 'garaje'];
+        let html = '';
+        for (let m of modulos) {
+            html += `<div class="card"><h2>${m.toUpperCase()}</h2><div id="${m}">Cargando...</div></div>`;
+        } 
+        document.getElementById('dashboard').innerHTML = html;
+        // Simulación: podrías usar fetch a los IPs de cada ESP32
+        // Por ahora texto de ejemplo
+        document.getElementById('baño').innerHTML = '<div class="valor">Modo: Día</div>';
+        document.getElementById('cocina').innerHTML = '<div>Gas: 0.2 ppm<br>Fuego: No<br>Humedad: 45%</div>';
+        document.getElementById('habitacion').innerHTML = '<div>Lux: 320<br>Persiana: 50%<br>Hora: 14:35</div>';
+        document.getElementById('garaje').innerHTML = '<div>Espacios libres: 5/8</div>';
+    }
+    cargarDatos();
+    setInterval(cargarDatos, 5000);
+</script>
+</body>
+</html>
