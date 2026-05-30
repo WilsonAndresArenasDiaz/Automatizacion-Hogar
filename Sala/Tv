@@ -1,0 +1,96 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+// Carita feliz
+byte cara1[8] = {
+  B00000,
+  B01010,
+  B01010,
+  B00000,
+  B10001,
+  B01110,
+  B00000,
+  B00000
+};
+
+// Carita sorprendida
+byte cara2[8] = {
+  B00000,
+  B01010,
+  B01010,
+  B00000,
+  B01110,
+  B10001,
+  B01110,
+  B00000
+};
+
+// Carita triste
+byte cara3[8] = {
+  B00000,
+  B01010,
+  B01010,
+  B00000,
+  B01110,
+  B10001,
+  B00000,
+  B11111
+};
+
+// Carita guiñando
+byte cara4[8] = {
+  B00000,
+  B00010,
+  B01010,
+  B00000,
+  B10001,
+  B01110,
+  B00000,
+  B00000
+};
+
+void setup() {
+  lcd.init();
+  lcd.backlight();
+
+  lcd.createChar(0, cara1);
+  lcd.createChar(1, cara2);
+  lcd.createChar(2, cara3);
+  lcd.createChar(3, cara4);
+
+  lcd.setCursor(4, 0);
+  lcd.print("TV IoT");
+}
+
+void loop() {
+
+  for (int pos = 15; pos >= -4; pos--) {
+
+    lcd.setCursor(0, 1);
+    lcd.print("                "); // limpia fila
+
+    if (pos >= 0 && pos < 16) {
+      lcd.setCursor(pos, 1);
+      lcd.write(byte(0));
+    }
+
+    if (pos + 1 >= 0 && pos + 1 < 16) {
+      lcd.setCursor(pos + 1, 1);
+      lcd.write(byte(1));
+    }
+
+    if (pos + 2 >= 0 && pos + 2 < 16) {
+      lcd.setCursor(pos + 2, 1);
+      lcd.write(byte(2));
+    }
+
+    if (pos + 3 >= 0 && pos + 3 < 16) {
+      lcd.setCursor(pos + 3, 1);
+      lcd.write(byte(3));
+    }
+
+    delay(200);
+  }
+}
