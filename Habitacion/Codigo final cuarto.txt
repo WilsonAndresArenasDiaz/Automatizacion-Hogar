@@ -1,0 +1,348 @@
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include <ArduinoJson.h>
+#include <Wire.h>
+#include <BH1750.h>
+#include <TM1637Display.h>
+#include <NTPClient.h>
+#include <WiFiUDP.h>
+
+// ─── Configuración WiFi ───────────────────────────────────────────
+const char* WIFI_SSID     = "BigDj";         // ← Cambiar
+const char* WIFI_PASSWORD = "BIGDJ111";       // ← Cambiar
+
+// ─── Configuración servidor ───────────────────────────────────────
+const char* SERVER_URL    = "https://grupoeos.com.co/api/recibir_datos.php";  // ← Cambiar
+const char* COMANDO_URL   = "https://grupoeos.com.co/api/obtener_comando.php"; // ← Cambiar
+const char* API_KEY       = "dRcor0tZY54MGdR7jJhVriwpilioskj0";                   // ← Cambiar
+
+// ─── Pines ────────────────────────────────────────────────────────
+#define PIN_RELE        33
+#define PIN_MOTOR_IN1   27
+#define PIN_MOTOR_IN2   14
+#define PIN_POTENCIOM   34
+#define PIN_TM_CLK      18
+#define PIN_TM_DIO      19
+
+// ─── Objetos ──────────────────────────────────────────────────────
+BH1750 sensorLuz;
+TM1637Display display(PIN_TM_CLK, PIN_TM_DIO);
+WiFiUDP ntpUDP;
+NTPClient ntp(ntpUDP, "pool.ntp.org", -18000, 60000);
+
+// ─── Estado del sistema ───────────────────────────────────────────
+bool  luzEncendida     = false;
+bool  modoAutomatico   = false;
+float umbralEncender   = 100.0;
+float umbralApagar     = 400.0;
+int   posicionAnterior = -1;
+
+// ─── Timers ───────────────────────────────────────────────────────
+unsigned long tUltimoLuz     = 0;
+unsigned long tUltimoPersi   = 0;
+unsigned long tUltimoReloj   = 0;
+unsigned long tUltimoDisplay = 0;
+unsigned long tUltimoVoz     = 0;
+
+const unsigned long INTERVALO_LUZ     = 10000;
+const unsigned long INTERVALO_PERSI   = 2000;
+const unsigned long INTERVALO_RELOJ   = 3600000;
+const unsigned long INTERVALO_DISPLAY = 1000;
+const unsigned long INTERVALO_VOZ     = 3000;   // Consultar voz cada 3 segundos
+
+// ═══════════════════════════════════════════════════════════════════
+void setup() {
+  Serial.begin(115200);
+  Serial.println("\n[ESP32] Iniciando Habitación Inteligente v3...");
+
+  pinMode(PIN_RELE,      OUTPUT);
+  pinMode(PIN_MOTOR_IN1, OUTPUT);
+  pinMode(PIN_MOTOR_IN2, OUTPUT);
+
+  digitalWrite(PIN_RELE,      LOW);
+  digitalWrite(PIN_MOTOR_IN1, LOW);
+  digitalWrite(PIN_MOTOR_IN2, LOW);
+
+  display.setBrightness(7);
+  display.showNumberDec(0, true);
+
+  Wire.begin(21, 22);
+  if (sensorLuz.begin(BH1750::CONTINUOUS_HIGH_RES_MODE)) {
+    Serial.println("[BH1750] OK");
+  } else {
+    Serial.println("[BH1750] ERROR");
+  }
+
+  conectarWiFi();
+  ntp.begin();
+  ntp.update();
+  Serial.println("[NTP] Hora: " + ntp.getFormattedTime());
+}
+
+// ═══════════════════════════════════════════════════════════════════
+void loop() {
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("[WiFi] Reconectando...");
+    conectarWiFi();
+  }
+
+  ntp.update();
+
+  gestionarIluminacion();
+  gestionarPersiana();
+  gestionarDisplay();
+  consultarComandoVoz();  // ← Nuevo: consulta cada 3 segundos
+
+  if (millis() - tUltimoReloj >= INTERVALO_RELOJ || tUltimoReloj == 0) {
+    enviarReloj();
+    tUltimoReloj = millis();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MÓDULO 1 — ILUMINACIÓN
+// ═══════════════════════════════════════════════════════════════════
+void gestionarIluminacion() {
+  if (millis() - tUltimoLuz < INTERVALO_LUZ) return;
+  tUltimoLuz = millis();
+
+  float lux = sensorLuz.readLightLevel();
+  if (lux < 0) {
+    Serial.println("[BH1750] Lectura inválida");
+    return;
+  }
+
+  if (modoAutomatico) {
+    if (lux < umbralEncender && !luzEncendida) encenderLuz();
+    else if (lux > umbralApagar && luzEncendida) apagarLuz();
+  }
+
+  String estado = luzEncendida ? "encendido" : "apagado";
+  Serial.printf("[Luz] %.1f lux — %s\n", lux, estado.c_str());
+
+  StaticJsonDocument<200> doc;
+  doc["api_key"] = API_KEY;
+  doc["modulo"]  = "iluminacion";
+  doc["lux"]     = lux;
+  doc["estado"]  = estado;
+  enviarJSON(doc);
+}
+
+void encenderLuz() {
+  digitalWrite(PIN_RELE, HIGH);  // HIGH = enciende con GPIO directo
+  luzEncendida = true;
+  Serial.println("[Luz] Encendida");
+}
+
+void apagarLuz() {
+  digitalWrite(PIN_RELE, LOW);   // LOW = apaga
+  luzEncendida = false;
+  Serial.println("[Luz] Apagada");
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MÓDULO 2 — PERSIANA
+// ═══════════════════════════════════════════════════════════════════
+void gestionarPersiana() {
+  if (millis() - tUltimoPersi < INTERVALO_PERSI) return;
+  tUltimoPersi = millis();
+
+  int raw      = analogRead(PIN_POTENCIOM);
+  int posicion = map(raw, 0, 4095, 0, 100);
+
+  if (abs(posicion - posicionAnterior) < 3) return;
+
+  String comando = "manual";
+  if (posicionAnterior != -1) {
+    if (posicion > posicionAnterior) {
+      comando = "subir";
+      subirPersiana();
+    } else {
+      comando = "bajar";
+      bajarPersiana();
+    }
+  }
+
+  posicionAnterior = posicion;
+  delay(500);
+  detenerPersiana();
+
+  Serial.printf("[Persiana] %d%% — %s\n", posicion, comando.c_str());
+
+  StaticJsonDocument<200> doc;
+  doc["api_key"]  = API_KEY;
+  doc["modulo"]   = "persiana";
+  doc["posicion"] = posicion;
+  doc["comando"]  = comando;
+  enviarJSON(doc);
+}
+
+void subirPersiana() {
+  digitalWrite(PIN_MOTOR_IN1, HIGH);
+  digitalWrite(PIN_MOTOR_IN2, LOW);
+  Serial.println("[Motor] Subiendo");
+}
+
+void bajarPersiana() {
+  digitalWrite(PIN_MOTOR_IN1, LOW);
+  digitalWrite(PIN_MOTOR_IN2, HIGH);
+  Serial.println("[Motor] Bajando");
+}
+
+void detenerPersiana() {
+  digitalWrite(PIN_MOTOR_IN1, LOW);
+  digitalWrite(PIN_MOTOR_IN2, LOW);
+  Serial.println("[Motor] Detenido");
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MÓDULO 3 — RELOJ
+// ═══════════════════════════════════════════════════════════════════
+void gestionarDisplay() {
+  if (millis() - tUltimoDisplay < INTERVALO_DISPLAY) return;
+  tUltimoDisplay = millis();
+
+  int hora    = ntp.getHours();
+  int minutos = ntp.getMinutes();
+  int tiempo  = hora * 100 + minutos;
+  bool puntos = (millis() / 1000) % 2;
+  display.showNumberDecEx(tiempo, puntos ? 0b01000000 : 0, true);
+}
+
+void enviarReloj() {
+  String horaFormateada = ntp.getFormattedTime();
+  Serial.println("[Reloj] Sincronizando: " + horaFormateada);
+
+  StaticJsonDocument<200> doc;
+  doc["api_key"]          = API_KEY;
+  doc["modulo"]           = "reloj";
+  doc["hora_dispositivo"] = horaFormateada;
+  enviarJSON(doc);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MÓDULO 4 — COMANDOS DE VOZ (consulta al servidor)
+// ═══════════════════════════════════════════════════════════════════
+void consultarComandoVoz() {
+  if (millis() - tUltimoVoz < INTERVALO_VOZ) return;
+  tUltimoVoz = millis();
+
+  if (WiFi.status() != WL_CONNECTED) return;
+
+  HTTPClient http;
+  String url = String(COMANDO_URL) + "?api_key=" + API_KEY;
+  http.begin(url);
+  http.setTimeout(5000);
+
+  int codigo = http.GET();
+
+  if (codigo == 200) {
+    String respuesta = http.getString();
+
+    StaticJsonDocument<256> doc;
+    DeserializationError error = deserializeJson(doc, respuesta);
+
+    if (!error && doc["ok"] == true) {
+      String comando = doc["comando"].as<String>();
+
+      if (comando.length() > 0) {
+        Serial.println("[Voz] Comando recibido: " + comando);
+        procesarComandoVoz(comando);
+      }
+    }
+  }
+
+  http.end();
+}
+
+void procesarComandoVoz(String comando) {
+  comando.toLowerCase();
+  comando.trim();
+
+  bool reconocido = true;
+
+  if (comando.indexOf("enciende la luz") >= 0 ||
+      comando.indexOf("encender luz") >= 0) {
+    modoAutomatico = false;
+    encenderLuz();
+
+  } else if (comando.indexOf("apaga la luz") >= 0 ||
+             comando.indexOf("apagar luz") >= 0) {
+    modoAutomatico = false;
+    apagarLuz();
+
+  } else if (comando.indexOf("sube la persiana") >= 0 ||
+             comando.indexOf("subir persiana") >= 0) {
+    subirPersiana();
+    delay(2000);
+    detenerPersiana();
+
+  } else if (comando.indexOf("baja la persiana") >= 0 ||
+             comando.indexOf("bajar persiana") >= 0) {
+    bajarPersiana();
+    delay(2000);
+    detenerPersiana();
+
+  } else if (comando.indexOf("modo noche") >= 0) {
+    modoAutomatico = false;
+    apagarLuz();
+    bajarPersiana();
+    delay(3000);
+    detenerPersiana();
+
+  } else if (comando.indexOf("apaga todo") >= 0) {
+    modoAutomatico = false;
+    apagarLuz();
+    detenerPersiana();
+
+  } else if (comando.indexOf("modo automatico") >= 0) {
+    modoAutomatico = true;
+    Serial.println("[Voz] Modo automático activado");
+
+  } else {
+    reconocido = false;
+    Serial.println("[Voz] No reconocido: " + comando);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// UTILIDADES
+// ═══════════════════════════════════════════════════════════════════
+void conectarWiFi() {
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  Serial.print("[WiFi] Conectando");
+
+  int intentos = 0;
+  while (WiFi.status() != WL_CONNECTED && intentos < 30) {
+    delay(500);
+    Serial.print(".");
+    intentos++;
+  }
+
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("\n[WiFi] Conectado — IP: " + WiFi.localIP().toString());
+  } else {
+    Serial.println("\n[WiFi] Sin conexión.");
+  }
+}
+
+void enviarJSON(StaticJsonDocument<200>& doc) {
+  if (WiFi.status() != WL_CONNECTED) return;
+
+  String json;
+  serializeJson(doc, json);
+
+  HTTPClient http;
+  http.begin(SERVER_URL);
+  http.addHeader("Content-Type", "application/json");
+  http.addHeader("X-API-Key", API_KEY);
+  http.setTimeout(8000);
+
+  int codigo = http.POST(json);
+  if (codigo == 200) {
+    Serial.println("[HTTP] OK → " + http.getString());
+  } else {
+    Serial.printf("[HTTP] Error %d\n", codigo);
+  }
+  http.end();
+}
