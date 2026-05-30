@@ -1,1 +1,4 @@
-
+ArduinoJson (by Benoit Blanchon)
+HTTPClient (nativa de ESP32)
+WiFi (nativa)
+WebServer (nativa)
