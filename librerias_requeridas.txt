@@ -1,1 +1,20 @@
+# Librerías para Arduino/ESP32
+- WiFi.h (nativa)
+- WebServer.h (nativa)
+- HTTPClient.h (nativa)
+- ArduinoJson.h (>=6.0)
+- Wire.h (nativa)
+- Adafruit_GFX.h
+- Adafruit_SSD1306.h
+- BH1750.h (by Christopher Laws)
+- TM1637Display.h (by Avishay Orpaz)
+- NTPClient.h (by Fabrice Weinberg)
+- ESP32Servo.h (by John K. Bennett)
+- LiquidCrystal_I2C.h (by Frank de Brabander)
+- DHT sensor library (si se usa, opcional)
 
+# Para el script YOLO (Python)
+- opencv-python
+- torch
+- numpy
+- pyserial
