@@ -1,5 +1,6 @@
 # Cocina Inteligente con ESP32 para Proyecto de Domótica
-<img width="800" height="533" alt="image" src="https://github.com/user-attachments/assets/bc11bfa4-3531-40f1-8da4-910f6acca0d9" />
+<img width="1807" height="1355" alt="cocina" src="https://github.com/user-attachments/assets/b22cd879-3852-400c-8646-494cc0a1c6c5" />
+
 
 ## Descripción
 Este proyecto implementa una **cocina inteligente** como parte de una casa domótica.  
