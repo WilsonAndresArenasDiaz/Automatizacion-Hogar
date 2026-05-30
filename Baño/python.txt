@@ -1,0 +1,240 @@
+from flask import Flask, request, send_file, jsonify
+import requests
+
+ESP_BANO = ["192.168.43.63"]
+ESP_COCINA = ["192.168.43.104"]
+
+# ✅ NUEVO ESP HABITACIÓN
+ESP_HABITACION = ["192.168.43.123"]
+
+# ✅ SERVIDOR REMOTO (el de tu ESP32 habitación)
+COMANDO_URL = "https://grupoeos.com.co/api/enviar_comando.php"
+API_KEY = "dRcor0tZY54MGdR7jJhVriwpilioskj0"
+
+app = Flask(__name__)
+
+# ==========================
+# ✅ RUTA PRINCIPAL (HTML)
+# ==========================
+@app.route("/")
+def index():
+    return send_file("index.html")
+
+# ==========================
+# 🧠 NORMALIZAR TEXTO
+# ==========================
+def normalizar(texto):
+    return texto.lower().strip()
+
+# ==========================
+# 🔥 DETECTAR MODO BAÑO
+# ==========================
+def detectar_modo(texto):
+
+    if any(x in texto for x in ["spa","relajar","calma","descanso","tranquilo"]):
+        return "spa"
+
+    if any(x in texto for x in ["dia","día","diurno","mañana","manana","luz","claro"]):
+        return "manana"
+
+    if any(x in texto for x in ["noche","oscuro","dormir"]):
+        return "noche"
+
+    return "none"
+
+# ==========================
+# 🍳 DETECTAR COCINA
+# ==========================
+def detectar_cocina(texto):
+
+    if any(x in texto for x in ["estufa","cocina","gas","fogón","fogon"]):
+        return "estufa"
+
+    if any(x in texto for x in ["nevera","refrigerador","heladera"]):
+        return "nevera"
+
+    if any(x in texto for x in ["extractor","ventilador","humo","aire"]):
+        return "extractor"
+
+    if any(x in texto for x in ["bomba","agua","riego","regar"]):
+        return "bomba"
+
+    if any(x in texto for x in ["buzzer","alarma","sonido"]):
+        return "buzzer"
+
+    return "none"
+
+# ==========================
+# 🛏️ DETECTAR HABITACIÓN (NUEVO)
+# ==========================
+def detectar_habitacion(texto):
+
+    if any(x in texto for x in ["luz habitacion","luz cuarto","luz habitacion"]):
+        return "luz"
+
+    if any(x in texto for x in ["persiana","cortina","ventana"]):
+        return "persiana"
+
+    if "modo noche" in texto:
+        return "modo_noche"
+
+    if "automatico" in texto:
+        return "automatico"
+
+    return "none"
+
+# ==========================
+# ✅ DETECTAR ORDEN
+# ==========================
+def es_orden(texto):
+    return any(x in texto for x in [
+        "modo","cambia","pon","activa","enciende",
+        "apaga","prende","haz","quiero",
+        "activar","apagar","iniciar","detener"
+    ])
+
+# ==========================
+# 📊 SENSORES
+# ==========================
+def leer_sensores():
+    try:
+        r = requests.get(
+            f"http://{ESP_COCINA[0]}/datos",
+            timeout=2,
+            headers={"Connection": "close"}
+        )
+        return r.json()
+    except:
+        return None
+
+# ==========================
+# 🤖 CHAT PRINCIPAL
+# ==========================
+@app.route("/chat", methods=["POST"])
+def chat():
+
+    data = request.get_json(silent=True) or {}
+    texto = normalizar(data.get("mensaje", ""))
+
+    print("\n👤 Usuario:", texto)
+
+    modo = detectar_modo(texto)
+    cocina = detectar_cocina(texto)
+    habitacion = detectar_habitacion(texto)
+
+    ejecutar = es_orden(texto)
+
+    # ✅ forzar ejecución
+    if cocina in ["extractor","bomba","buzzer"]:
+        ejecutar = True
+
+    if habitacion != "none":
+        ejecutar = True
+
+    estado = "on"
+    if "apaga" in texto:
+        estado = "off"
+
+    accion_realizada = False
+
+    # ==========================
+    # ✅ BAÑO
+    # ==========================
+    if modo != "none" and ejecutar:
+        for ip in ESP_BANO:
+            try:
+                requests.get(f"http://{ip}/modo?modo={modo}", timeout=2)
+                accion_realizada = True
+            except:
+                pass
+
+    # ==========================
+    # ✅ COCINA
+    # ==========================
+    if cocina != "none" and ejecutar:
+        for ip in ESP_COCINA:
+            try:
+
+                if cocina == "extractor":
+                    requests.get(f"http://{ip}/extractor", timeout=10, headers={"Connection": "close"})
+
+                elif cocina == "bomba":
+                    requests.get(f"http://{ip}/bomba", timeout=10, headers={"Connection": "close"})
+
+                elif cocina == "buzzer":
+                    requests.get(f"http://{ip}/buzzer", timeout=3)
+
+                else:
+                    requests.get(f"http://{ip}/{cocina}?estado={estado}", timeout=3)
+
+                accion_realizada = True
+
+            except Exception as e:
+                print("❌ error cocina:", e)
+
+    # ==========================
+    # ✅ HABITACIÓN (NUEVO CONTROL VOZ)
+    # ==========================
+    if habitacion != "none" and ejecutar:
+        try:
+            print("📡 HABITACIÓN:", habitacion)
+
+            comando_texto = ""
+
+            if habitacion == "luz":
+                if estado == "on":
+                    comando_texto = "enciende la luz"
+                else:
+                    comando_texto = "apaga la luz"
+
+            elif habitacion == "persiana":
+                if "sube" in texto:
+                    comando_texto = "sube la persiana"
+                elif "baja" in texto:
+                    comando_texto = "baja la persiana"
+
+            elif habitacion == "modo_noche":
+                comando_texto = "modo noche"
+
+            elif habitacion == "automatico":
+                comando_texto = "modo automatico"
+
+            # ✅ enviar comando al servidor ESP32
+            if comando_texto != "":
+                requests.post(COMANDO_URL, json={
+                    "api_key": API_KEY,
+                    "comando": comando_texto
+                }, timeout=5)
+
+                print("✅ Comando enviado habitación:", comando_texto)
+                accion_realizada = True
+
+        except Exception as e:
+            print("❌ error habitación:", e)
+
+    # ==========================
+    # ✅ SENSORES
+    # ==========================
+    if any(x in texto for x in ["gas","humedad","fuego"]):
+        datos = leer_sensores()
+        if datos:
+            return jsonify({
+                "respuesta": f"Gas:{datos['gas']} | Humedad:{datos['humedad']} | Fuego:{datos['fuego']}"
+            })
+
+    # ==========================
+    # ✅ RESPUESTA
+    # ==========================
+    if accion_realizada:
+        return jsonify({"respuesta": "✅ Acción ejecutada"})
+
+    return jsonify({
+        "respuesta": "🤖 No entendí el comando"
+    })
+
+# ==========================
+# 🚀 RUN
+# ==========================
+if __name__ == "__main__":
+    print("🚿🤖 SERVIDOR FINAL FUNCIONANDO")
+    app.run(host="0.0.0.0", port=5000)

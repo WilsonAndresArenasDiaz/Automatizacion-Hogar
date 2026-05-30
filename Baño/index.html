@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Smart Bathroom AI</title>
+
+<style>
+
+body {
+  margin:0;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #0f2027, #203a43);
+  color:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+
+.container {
+  width:380px;
+  background: rgba(255,255,255,0.05);
+  border-radius:20px;
+  padding:20px;
+  box-shadow: 0 0 40px rgba(0,0,0,0.6);
+}
+
+h2 {
+  text-align:center;
+}
+
+/* OLED SIMULADO */
+.oled {
+  background:black;
+  color:#00ffcc;
+  font-family: monospace;
+  text-align:center;
+  padding:15px;
+  border-radius:10px;
+  margin-bottom:15px;
+  box-shadow: 0 0 20px #00ffcc;
+}
+
+.oled-title {
+  font-size:12px;
+  color:#777;
+}
+
+.oled-status {
+  font-size:22px;
+  font-weight:bold;
+}
+
+/* CHAT */
+.chat {
+  height:250px;
+  overflow-y:auto;
+  background:#111f2c;
+  padding:10px;
+  border-radius:10px;
+}
+
+.msg {
+  margin:5px;
+  padding:8px;
+  border-radius:8px;
+  max-width:75%;
+}
+
+.user {
+  background:#007bff;
+  margin-left:auto;
+}
+
+.bot {
+  background:#00c6ff;
+  color:black;
+}
+
+/* INPUT */
+.inputBox {
+  display:flex;
+  margin-top:10px;
+}
+
+input {
+  flex:1;
+  padding:10px;
+  border-radius:10px;
+  border:none;
+  outline:none;
+}
+
+button {
+  margin-left:5px;
+  padding:10px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+.send {
+  background:#007bff;
+  color:white;
+}
+
+.mic {
+  background:#00c851;
+  color:white;
+}
+
+/* INDICADOR COLOR */
+.barra {
+  margin-top:10px;
+  height:10px;
+  border-radius:10px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>🤖 Smart Bathroom</h2>
+
+<!-- OLED SIMULADO -->
+<div class="oled">
+  <div class="oled-title">MODO ACTUAL</div>
+  <div id="oled" class="oled-status">---</div>
+</div>
+
+<div id="chat" class="chat"></div>
+
+<div id="barra" class="barra"></div>
+
+<div class="inputBox">
+  <input id="input" placeholder="Escribe o habla..." onkeydown="if(event.key==='Enter'){enviar()}">
+  <button class="send" onclick="enviar()">Enviar</button>
+  <button class="mic" onclick="voz()">🎤</button>
+</div>
+
+</div>
+
+<script>
+
+// =====================
+// CHAT
+// =====================
+function addMsg(text, tipo){
+  let chat = document.getElementById("chat");
+
+  let div = document.createElement("div");
+  div.className = "msg " + tipo;
+  div.innerText = text;
+
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+// =====================
+// ENVIAR TEXTO
+// =====================
+async function enviar(){
+
+  let input = document.getElementById("input");
+  let texto = input.value.trim();
+
+  if(texto === "") return;
+
+  addMsg("Tú: " + texto, "user");
+  input.value = "";
+
+  try {
+
+    let res = await fetch("http://localhost:5000/chat", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({mensaje:texto})
+    });
+
+    let data = await res.json();
+
+    addMsg("Bot: " + data.respuesta, "bot");
+
+    actualizarUI(data.modo);
+
+  } catch(e){
+    addMsg("Bot: Error conexión 🤖", "bot");
+  }
+}
+
+// =====================
+// VOZ
+// =====================
+function voz(){
+
+  const SpeechRecognition = window.webkitSpeechRecognition;
+
+  if(!SpeechRecognition){
+    alert("No soporta voz");
+    return;
+  }
+
+  let recognition = new SpeechRecognition();
+  recognition.lang = "es-ES";
+
+  recognition.onresult = function(event){
+    let texto = event.results[0][0].transcript;
+    document.getElementById("input").value = texto;
+    enviar();
+  };
+
+  recognition.start();
+}
+
+// =====================
+// ACTUALIZAR OLED + BARRA
+// =====================
+function actualizarUI(modo){
+
+  let oled = document.getElementById("oled");
+  let barra = document.getElementById("barra");
+
+  if(modo === "spa"){
+    oled.innerText = "SPA";
+    barra.style.background = "red";
+  }
+  else if(modo === "manana"){
+    oled.innerText = "MAÑANA";
+    barra.style.background = "yellow";
+  }
+  else if(modo === "noche"){
+    oled.innerText = "NOCHE";
+    barra.style.background = "green";
+  }
+  else {
+    oled.innerText = "---";
+    barra.style.background = "transparent";
+  }
+}
+
+</script>
+
+</body>
+</html>
