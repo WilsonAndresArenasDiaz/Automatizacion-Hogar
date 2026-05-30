@@ -1,3 +1,7 @@
+# Descripción del proyecto.
+Este proyecto consiste en una consola interactiva desarrollada con Arduino que integra diferentes modos de funcionamiento en un solo sistema. Mediante una pantalla LCD I2C, botones físicos, un parlante y comunicación serial con una computadora, el usuario puede navegar entre distintas apciones o juegos de forma intuitiva. El sistema incluye un modo Piano, donde cada botón reproduce una nota musical diferente; un juego Dinosaurio, en el que el jugador debe esquivar obstáculos para obtener la mayor puntuación posible; y un juego Simón Dice, que pone a prueba la memoria mediante secuencias de sonidos que deben repetirse correctamente. Además, el proyecto incorpora control por voz utilizando una aplicación desarrollada en Python y un modelo de inteligencia artificial ejecutado localmente con Ollama. Gracias a esta integración, el usuario puede cambiar entre los distintos modos mediante comandos de voz enviados al Arduino a través de comunicación serial. El objetivo principal del proyecto es integrar conceptos de programación embebida, electrónica digital, interfaces de usuario, comunicación serial e inteligencia artificial en una única plataforma funcional e interactiva.
+
+
 ```
 // ==========================================================
 // 1. LIBRERÍAS DEL PROYECTO
