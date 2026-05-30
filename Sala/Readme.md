@@ -1386,6 +1386,325 @@ mostrarPantallaInicio();
 ```
 Vuelve al menú inicial.
 
+# 😀 Animación de Caritas en LCD I2C 16x2 con Arduino para simulacion de tv
 
+# 📌 Descripción del proyecto
 
+Este proyecto utiliza una pantalla LCD I2C 16x2 para mostrar una animación de cuatro caritas creadas mediante caracteres personalizados.
+
+Las caritas:
+
+😀 Feliz
+😮 Sorprendida
+☹️ Triste
+😉 Guiñando
+
+se desplazan juntas desde el extremo derecho de la pantalla hacia el extremo izquierdo.
+
+# 🛠 Materiales utilizados
+
+* Arduino UNO
+* Pantalla LCD I2C 16x2
+* Módulo I2C (dirección 0x27)
+* Cables Dupont
+* Protoboard (opcional)
+
+# 📚 Librerías utilizadas
+```cpp
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+```
+## Explicación
+
+### Wire.h
+
+Permite la comunicación I2C entre Arduino y la pantalla LCD.
+
+Utiliza únicamente:
+
+* SDA
+* SCL
+
+### LiquidCrystal_I2C.h
+
+Permite controlar fácilmente una pantalla LCD equipada con módulo I2C.
+
+# 🖥 Configuración de la pantalla
+
+```cpp
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+```
+
+## Parámetros
+
+| Parámetro | Significado   |
+| --------- | ------------- |
+| 0x27      | Dirección I2C |
+| 16        | Columnas      |
+| 2         | Filas         |
+
+# 😀 Carácter 1: Carita Feliz
+```cpp
+byte cara1[8] = {
+  B00000,
+  B01010,
+  B01010,
+  B00000,
+  B10001,
+  B01110,
+  B00000,
+  B00000
+};
+```
+
+## Representación gráfica
+```text
+     
+ O O
+ O O
+
+O   O
+ OOO
+```
+
+# 😮 Carácter 2: Carita Sorprendida
+```cpp
+byte cara2[8] = {
+  B00000,
+  B01010,
+  B01010,
+  B00000,
+  B01110,
+  B10001,
+  B01110,
+  B00000
+};
+```
+Representa una expresión de sorpresa.
+
+# ☹️ Carácter 3: Carita Triste
+
+```cpp
+byte cara3[8] = {
+  B00000,
+  B01010,
+  B01010,
+  B00000,
+  B01110,
+  B10001,
+  B00000,
+  B11111
+};
+```
+Representa una expresión triste.
+
+# 😉 Carácter 4: Carita Guiñando
+
+```cpp
+byte cara4[8] = {
+  B00000,
+  B00010,
+  B01010,
+  B00000,
+  B10001,
+  B01110,
+  B00000,
+  B00000
+};
+```
+Representa una carita guiñando un ojo.
+
+# ⚙️ Función setup()
+```cpp
+void setup()
+```
+Se ejecuta una sola vez cuando Arduino inicia.
+
+## Inicializar LCD
+```cpp
+lcd.init();
+```
+Inicializa la comunicación con la pantalla.
+
+## Encender retroiluminación
+```cpp
+lcd.backlight();
+```
+Activa la luz de fondo.
+
+## Registrar caracteres personalizados
+```cpp
+lcd.createChar(0, cara1);
+lcd.createChar(1, cara2);
+lcd.createChar(2, cara3);
+lcd.createChar(3, cara4);
+```
+La memoria CGRAM de la LCD almacena hasta 8 caracteres personalizados.
+
+| Número | Carácter    |
+| ------ | ----------- |
+| 0      | Feliz       |
+| 1      | Sorprendida |
+| 2      | Triste      |
+| 3      | Guiñando    |
+
+# Mostrar título
+```cpp
+lcd.setCursor(4, 0);
+lcd.print("TV IoT");
+```
+
+## Resultado
+```text
+    TV IoT
+```
+
+Se imprime en la primera fila.
+
+# 🔄 Función loop()
+```cpp
+void loop()
+```
+
+Se ejecuta continuamente.
+
+# Movimiento de las caritas
+```cpp
+for (int pos = 15; pos >= -4; pos--)
+```
+
+## Explicación
+La variable:
+```cpp
+pos
+```
+controla la posición horizontal.
+
+Comienza en:
+```cpp
+15
+```
+
+que corresponde a la última columna de la LCD.
+
+Y termina en:
+```cpp
+-4
+```
+para permitir que todas las caritas salgan completamente de la pantalla.
+
+# Limpiar segunda fila
+
+```cpp
+lcd.setCursor(0, 1);
+lcd.print("                ");
+```
+
+Se escriben 16 espacios.
+
+Resultado:
+```text
+[                ]
+```
+La fila queda vacía antes de dibujar nuevamente.
+
+# Dibujar carita feliz
+```cpp
+if (pos >= 0 && pos < 16)
+```
+Verifica si la posición está dentro de la pantalla.
+
+```cpp
+lcd.setCursor(pos, 1);
+lcd.write(byte(0));
+```
+Dibuja la carita feliz.
+
+# Dibujar carita sorprendida
+```cpp
+if (pos + 1 >= 0 && pos + 1 < 16)
+```
+Ubica la segunda carita una columna después.
+
+```cpp
+lcd.write(byte(1));
+```
+Muestra la carita sorprendida.
+
+# Dibujar carita triste
+```cpp
+if (pos + 2 >= 0 && pos + 2 < 16)
+```
+Desplaza dos columnas.
+
+```cpp
+lcd.write(byte(2));
+```
+Muestra la carita triste.
+
+# Dibujar carita guiñando
+```cpp
+if (pos + 3 >= 0 && pos + 3 < 16)
+```
+Desplaza tres columnas.
+
+```cpp
+lcd.write(byte(3));
+```
+Muestra la carita guiñando.
+
+# Ejemplo visual del movimiento
+
+### Inicio
+```text
+TV IoT
+
+            😀😮☹😉
+```
+
+### Movimiento intermedio
+```text
+TV IoT
+
+      😀😮☹😉
+```
+
+### Final
+```text
+TV IoT
+
+😀😮☹😉
+```
+
+### Saliendo de pantalla
+```text
+TV IoT
+
+😮☹😉
+```
+
+Luego:
+```text
+TV IoT
+
+☹😉
+```
+
+Luego:
+```text
+TV IoT
+
+😉
+```
+Finalmente desaparecen.
+
+# Control de velocidad
+```cpp
+delay(200);
+```
+La animación espera:
+
+200 ms
+
+entre cada desplazamiento.
 
