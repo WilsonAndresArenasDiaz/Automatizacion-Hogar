@@ -1,1 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cocina Inteligente - Dashboard</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: linear-gradient(135deg, #1e2a3a, #0f1a24); color: white; padding: 20px; margin: 0; }
+        .container { max-width: 1200px; margin: auto; }
+        h1 { text-align: center; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+        .card { background: rgba(255,255,255,0.1); border-radius: 20px; padding: 20px; backdrop-filter: blur(5px); }
+        .card h3 { margin-top: 0; border-left: 5px solid #00c3ff; padding-left: 12px; }
+        .sensor-value { font-size: 2.5rem; font-weight: bold; margin: 15px 0; text-align: center; }
+        .button-group { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 15px 0; }
+        button { background: #007bff; border: none; color: white; padding: 10px 20px; border-radius: 30px; cursor: pointer; }
+        button:hover { transform: scale(1.02); }
+        .btn-off { background: #6c757d; }
+        .btn-success { background: #28a745; }
+        .btn-danger { background: #dc3545; }
+        .alerta { animation: pulse 1s infinite; color: #ff8888; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } }
+        footer { text-align: center; margin-top: 40px; opacity: 0.7; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🍳 Cocina Inteligente - Dashboard</h1>
+    <div class="grid">
+        <div class="card"><h3>💨 Gas (MQ-135)</h3><div id="gasValor" class="sensor-value">---</div><div id="gasAlerta"></div></div>
+        <div class="card"><h3>🔥 Flama</h3><div id="fuegoValor" class="sensor-value">---</div><div id="fuegoAlerta"></div></div>
+        <div class="card"><h3>💧 Humedad Suelo</h3><div id="humedadValor" class="sensor-value">---</div><div id="humedadAlerta"></div></div>
+        <div class="card">
+            <h3>🎮 Controles</h3>
+            <div class="button-group">
+                <button id="btnEstufaOn">🔴 Estufa ON</button>
+                <button id="btnEstufaOff" class="btn-off">⚫ OFF</button>
+            </div>
+            <div class="button-group">
+                <button id="btnNeveraOn">🟢 Nevera ON</button>
+                <button id="btnNeveraOff" class="btn-off">⚫ OFF</button>
+            </div>
+            <div class="button-group">
+                <button id="btnExtractor" class="btn-success">🌀 Extractor (5s)</button>
+                <button id="btnBomba" class="btn-success">💦 Bomba (5s)</button>
+                <button id="btnBuzzer" class="btn-danger">🔔 Buzzer</button>
+            </div>
+        </div>
+    </div>
+    <footer>Datos actualizados cada 2 segundos | IP de la ESP32 (cambiar en el código)</footer>
+</div>
+<script>
+    // ★★★ CAMBIA ESTA IP POR LA QUE MUESTRA TU ESP32 EN EL MONITOR SERIE ★★★
+    const IP_ESP32 = "192.168.1.85";
+    const URL_DATOS = `http://${IP_ESP32}/datos`;
+    const URL_ESTUFA = `http://${IP_ESP32}/estufa`;
+    const URL_NEVERA = `http://${IP_ESP32}/nevera`;
+    const URL_EXTRACTOR = `http://${IP_ESP32}/extractor`;
+    const URL_BOMBA = `http://${IP_ESP32}/bomba`;
+    const URL_BUZZER = `http://${IP_ESP32}/buzzer`;
 
+    const UMBRAL_GAS = 3000;
+    const UMBRAL_HUMEDAD_SECO = 3200;
+
+    async function fetchDatos() {
+        try {
+            const res = await fetch(URL_DATOS);
+            const data = await res.json();
+            actualizarUI(data);
+        } catch(e) {
+            document.getElementById("gasValor").innerHTML = "⚠️ Error conexión";
+        }
+    }
+
+    function actualizarUI(data) {
+        const gas = data.gas;
+        document.getElementById("gasValor").innerHTML = gas;
+        const gasAlerta = document.getElementById("gasAlerta");
+        if(gas > UMBRAL_GAS) {
+            gasAlerta.innerHTML = "⚠️ ALTO GAS";
+            gasAlerta.classList.add("alerta");
+        } else { gasAlerta.innerHTML = "Normal"; gasAlerta.classList.remove("alerta"); }
+
+        const fuego = data.fuego;
+        const fuegoDiv = document.getElementById("fuegoValor");
+        if(fuego == 1) {
+            fuegoDiv.innerHTML = "🔥 FUEGO";
+            fuegoDiv.style.color = "#ff8888";
+            document.getElementById("fuegoAlerta").innerHTML = "¡CUIDADO!";
+        } else {
+            fuegoDiv.innerHTML = "✅ Sin fuego";
+            fuegoDiv.style.color = "#aaffaa";
+            document.getElementById("fuegoAlerta").innerHTML = "";
+        }
+
+        const hum = data.humedad;
+        document.getElementById("humedadValor").innerHTML = hum;
+        const humAlerta = document.getElementById("humedadAlerta");
+        if(hum > UMBRAL_HUMEDAD_SECO) {
+            humAlerta.innerHTML = "🌵 Suelo seco (necesita riego)";
+            humAlerta.style.color = "#ffaa66";
+        } else {
+            humAlerta.innerHTML = "💧 Suelo húmedo";
+            humAlerta.style.color = "#88ff88";
+        }
+    }
+
+    async function controlar(url) {
+        try {
+            await fetch(url);
+        } catch(e) { alert("Error conectando con ESP32"); }
+    }
+
+    document.getElementById("btnEstufaOn").onclick = () => controlar(URL_ESTUFA + "?estado=on");
+    document.getElementById("btnEstufaOff").onclick = () => controlar(URL_ESTUFA + "?estado=off");
+    document.getElementById("btnNeveraOn").onclick = () => controlar(URL_NEVERA + "?estado=on");
+    document.getElementById("btnNeveraOff").onclick = () => controlar(URL_NEVERA + "?estado=off");
+    document.getElementById("btnExtractor").onclick = () => controlar(URL_EXTRACTOR);
+    document.getElementById("btnBomba").onclick = () => controlar(URL_BOMBA);
+    document.getElementById("btnBuzzer").onclick = () => controlar(URL_BUZZER);
+
+    setInterval(fetchDatos, 2000);
+    fetchDatos();
+</script>
+</body>
+</html>
