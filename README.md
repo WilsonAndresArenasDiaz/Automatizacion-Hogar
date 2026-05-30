@@ -23,7 +23,7 @@ Todos los módulos (excepto Sala) se comunican por WiFi y envían datos a un ser
 4. Para el garaje, ejecuta `yolo_detector.py` en un PC con cámara para detectar autos y enviar comandos por serial.
 
 ## 📸 Fotos
-Ver carpeta `Fotos/`.
+Ver carpeta `Foto/`.
 
 ## 📜 Licencia
 Proyecto educativo de código abierto.
